@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: boosterhub-postgres
+    environment:
+      POSTGRES_DB: boosterhub
+      POSTGRES_USER: boosterhub
+      POSTGRES_PASSWORD: boosterhub
+    ports:
+      - "5432:5432"
+    volumes:
+      - boosterhub_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boosterhub -d boosterhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  boosterhub_postgres_data:
