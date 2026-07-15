@@ -61,3 +61,24 @@ Every new capability should strengthen BoosterHub's role as the organization's o
 - An accounting system.
 - A school district administration platform.
 - A product that attempts to solve every problem faced by athletic programs.
+
+## Payment Boundary
+
+This clarifies, and does not replace, the principle above that BoosterHub
+is not an accounting system.
+
+BoosterHub may track:
+
+- Payment obligations.
+- Recorded payments.
+- Balances.
+- Payment status.
+- Payment history.
+
+BoosterHub is not intended to provide:
+
+- General ledger accounting.
+- Bookkeeping.
+- Tax reporting.
+- Full financial reconciliation.
+- Replacement accounting software.
