@@ -357,14 +357,15 @@ BoosterHub/
 Kept intentionally high level — see the Engineering Journal for what's
 actually being worked on right now:
 
-- Extend the vertical-slice pattern to a second module (`team` or
-  `athlete`) to confirm it generalizes beyond `organization`.
-- Define the staged transition from the current flat Role model to the
-  approved Person, Membership, contextual participation, Position, and
-  Permission model.
-- Introduce authentication and authorization ahead of any write endpoints.
-- Add create/update operations once an auth story exists to guard them.
-- Begin the React frontend.
+- Implement Phase 1 of ADR-008 by establishing Person while temporarily
+  retaining legacy Role.
+- Review and commit Phase 1 before beginning Phase 2.
+- Extend the read-only vertical-slice pattern to `team` or `athlete` only
+  after the domain concepts used by that slice have completed the
+  applicable ADR-008 phase.
+- Keep authentication ahead of protected write endpoints.
+- Keep React frontend work deferred until the immediate backend
+  foundation is aligned.
 
 ---
 

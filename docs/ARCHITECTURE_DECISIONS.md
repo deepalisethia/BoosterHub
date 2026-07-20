@@ -218,3 +218,98 @@ modeling work happens. This ADR intentionally stops short of specifying
 how these concepts are represented in the database, the API, or any
 entity — that is future architecture and domain-modeling work, to be
 captured in its own ADR when it happens.
+
+---
+
+## ADR-008: Transition from User and Role through staged domain alignment
+
+**Status:** Accepted (Sprint 3)
+
+**Context:** The Sprint 1 backend represents human identity with `User`
+and stores `ADMIN`, `COACH`, `PARENT`, and `ATHLETE` in
+`OrganizationMembership.role`. The approved Domain Model now separates:
+
+- Person as stable human identity.
+- Membership as the Person–Organization relationship.
+- Athlete, Parent–Athlete, and Coach–Team as contextual participation.
+- Position as organizational responsibility.
+- Permission as authorized capability.
+
+The existing model must transition without editing prior Flyway
+migrations, introducing unnecessary compatibility infrastructure, or
+changing every domain relationship in one unreviewable step. BoosterHub
+currently has no production users, no authentication, no membership or
+athlete seed data, and no write endpoints for the affected concepts.
+
+**Decision:** BoosterHub will use a three-phase, forward-only migration.
+V1–V3 remain immutable. Each phase must leave the application buildable
+and Hibernate validation aligned with the migrated schema.
+
+**Phase 1 — Establish Person**
+
+- Rename `User` to `Person`.
+- Rename the `user` capability package to `person`.
+- Rename the `users` table to `people` through a new Flyway migration.
+- Rename affected foreign-key columns from user terminology to person
+  terminology.
+- Treat Person email as optional contact information, not login identity.
+- Remove global active status from Person; organization participation
+  belongs to Membership.
+- Temporarily retain `Role` as an explicitly documented legacy concept.
+- Do not add Account, authentication, or authorization.
+
+**Phase 2 — Normalize Membership and contextual participation**
+
+- Establish one Membership per Person–Organization pair.
+- Replace the membership active flag with lifecycle status: `INVITED`,
+  `PENDING_APPROVAL`, `ACTIVE`, `INACTIVE`.
+- Make Athlete belong to Membership.
+- Make Parent–Athlete reference the parent's Membership.
+- Make Coach–Team reference the coach's Membership.
+- Remove `OrganizationMembership.role` and the `Role` enum.
+- Do not infer missing Athlete, Parent, or Coach relationships from legacy
+  role labels.
+- Preserve legacy data only when its meaning is unambiguous.
+- Fail clearly when unexpected legacy data cannot be migrated safely
+  rather than silently guessing or discarding it.
+
+**Phase 3 — Establish Position and Permission**
+
+- Begin only after the initial Permission catalog is approved from
+  documented user journeys.
+- Add organization-scoped Positions.
+- Add the BoosterHub-owned Permission catalog.
+- Add Membership–Position assignments.
+- Add Position–Permission assignments.
+- Seed approved built-in Positions for existing Organizations.
+- Prohibit assigning Permissions directly to Person or Membership.
+- Keep authentication and authorization enforcement in their separately
+  approved implementation phase.
+
+A Coach–Team relationship establishes contextual coaching participation
+and team scope; a Coach Position grants organizational authority. The two
+concepts may coexist but have different responsibilities. Login remains
+required for application access, but Account is a separate future concept
+from Person.
+
+**Alternatives Considered:**
+
+1. Replace User, Role, Membership, Athlete, Position, Permission, and all
+   relationships in one migration. Rejected because it creates an
+   unnecessarily large, difficult-to-review change.
+2. Introduce a parallel identity/access model with dual reads and dual
+   writes. Rejected because BoosterHub has no production identity data
+   requiring zero-downtime compatibility.
+3. Extend or rename the Role enum. Rejected because it would preserve the
+   conflation between participation and authority.
+4. Edit V1–V3. Rejected because Flyway migrations are immutable historical
+   records.
+
+**Consequences:** The migration remains reviewable and testable in small
+phases. Existing schema history remains intact. Role temporarily remains
+during Phase 1 as explicit technical debt. Multiple Flyway migrations and
+coordinated entity updates are required. Unexpected ambiguous legacy data
+will stop migration rather than be silently changed. Account,
+authentication, authorization enforcement, and the complete Permission
+catalog remain deferred. Every phase must include matching schema
+changes, entity mappings, and relevant tests.

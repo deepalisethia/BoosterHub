@@ -8,6 +8,10 @@
 * Defined the initial organizational user journeys.
 * Implemented the first backend vertical slice for organizations.
 * Verified PostgreSQL, Flyway, JPA validation, DTO boundaries, and integration testing.
+* Defined Organization, Person, Membership, Position, Permission, Team, and
+  Athlete.
+* Approved the staged transition from User and Role to the foundational
+  domain model.
 
 ## Human-Owned Decisions
 
@@ -15,8 +19,6 @@ The following decisions must be made by a human Staff Engineer or Product
 Architect before AI-assisted implementation proceeds on the related work
 below. These are not mechanical implementation tasks.
 
-* Definition of Identity, Position, and Permission in the Domain Model.
-* Transition plan away from the current flat Role enum.
 * Permission catalog and assignment rules — which permissions exist, and
   how they attach to positions.
 * The Payment and accounting boundary.
@@ -24,30 +26,24 @@ below. These are not mechanical implementation tasks.
 
 ## In Progress
 
-* Define the foundational domain concepts required for implementation.
-* Prepare the backend for the next vertical slice. This is mechanical
-  groundwork only and does not include Identity, Position, or Permission
-  alignment.
+* Prepare Phase 1 of ADR-008: establish Person while temporarily retaining
+  legacy Role.
+* Keep the backend buildable and schema validation aligned throughout the
+  transition.
 
 ## Next
 
-Domain definition must be completed before backend alignment begins:
+* Implement and verify ADR-008 Phase 1.
+* Implement Phase 2 only after Phase 1 is reviewed and committed.
+* Implement the next read-only backend vertical slice only after the
+  domain concepts it uses have completed the applicable ADR-008 phase.
+* Define the initial Permission catalog from approved user journeys before
+  Phase 3.
+* Implement Position and Permission only after the catalog is approved.
 
-* Define Organization, Person, Membership, Position, Permission, Team, and
-  Athlete in the Domain Model.
-* Define the relationship between Identity, Position, and Permission.
-* Decide how the current flat Role model will transition to Identity,
-  Position, and Permissions, once the Domain Model above is complete.
-
-Only after the domain definition above is complete:
-
-* Align the existing backend with the Identity, Position, and Permission
-  model.
-
-Implementation tasks, independent of the domain definition above:
+Implementation tasks, independent of the domain-alignment sequence above:
 
 * Remove the unused Lombok dependency.
-* Implement the next read-only backend vertical slice.
 * Establish a consistent API error-response convention.
 * Add local development CORS configuration before frontend integration.
 
