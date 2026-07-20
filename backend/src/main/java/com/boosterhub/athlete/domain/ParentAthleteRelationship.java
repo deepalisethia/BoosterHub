@@ -1,6 +1,6 @@
 package com.boosterhub.athlete.domain;
 
-import com.boosterhub.user.domain.User;
+import com.boosterhub.person.domain.Person;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,8 +20,8 @@ public class ParentAthleteRelationship {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "parent_user_id", nullable = false)
-    private User parentUser;
+    @JoinColumn(name = "parent_person_id", nullable = false)
+    private Person parentPerson;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "athlete_id", nullable = false)
@@ -39,13 +39,13 @@ public class ParentAthleteRelationship {
 
     public ParentAthleteRelationship(
             UUID id,
-            User parentUser,
+            Person parentPerson,
             Athlete athlete,
             String relationshipType,
             OffsetDateTime createdAt
     ) {
         this.id = id;
-        this.parentUser = parentUser;
+        this.parentPerson = parentPerson;
         this.athlete = athlete;
         this.relationshipType = relationshipType;
         this.createdAt = createdAt;
@@ -55,8 +55,8 @@ public class ParentAthleteRelationship {
         return id;
     }
 
-    public User getParentUser() {
-        return parentUser;
+    public Person getParentPerson() {
+        return parentPerson;
     }
 
     public Athlete getAthlete() {

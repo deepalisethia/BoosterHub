@@ -1,4 +1,4 @@
-package com.boosterhub.user.domain;
+package com.boosterhub.person.domain;
 
 import com.boosterhub.organization.domain.Organization;
 import jakarta.persistence.Column;
@@ -14,6 +14,12 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Temporary ADR-008 Phase 1 technical debt: retains the pre-Sprint-2
+ * Role-based membership model, unchanged, so Phase 1 can establish Person
+ * without also redesigning Membership. Phase 2 will move this concept to
+ * its final capability and remove Role.
+ */
 @Entity
 @Table(name = "organization_memberships")
 public class OrganizationMembership {
@@ -26,8 +32,8 @@ public class OrganizationMembership {
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "person_id", nullable = false)
+    private Person person;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -46,14 +52,14 @@ public class OrganizationMembership {
     public OrganizationMembership(
             UUID id,
             Organization organization,
-            User user,
+            Person person,
             Role role,
             boolean active,
             OffsetDateTime createdAt
     ) {
         this.id = id;
         this.organization = organization;
-        this.user = user;
+        this.person = person;
         this.role = role;
         this.active = active;
         this.createdAt = createdAt;
@@ -67,8 +73,8 @@ public class OrganizationMembership {
         return organization;
     }
 
-    public User getUser() {
-        return user;
+    public Person getPerson() {
+        return person;
     }
 
     public Role getRole() {

@@ -1,14 +1,13 @@
 package com.boosterhub.athlete.domain;
 
 import com.boosterhub.organization.domain.Organization;
-import com.boosterhub.user.domain.User;
+import com.boosterhub.person.domain.Person;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
@@ -25,9 +24,9 @@ public class Athlete {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "person_id", nullable = true)
+    private Person person;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -54,7 +53,7 @@ public class Athlete {
     public Athlete(
             UUID id,
             Organization organization,
-            User user,
+            Person person,
             String firstName,
             String lastName,
             Integer graduationYear,
@@ -64,7 +63,7 @@ public class Athlete {
     ) {
         this.id = id;
         this.organization = organization;
-        this.user = user;
+        this.person = person;
         this.firstName = firstName;
         this.lastName = lastName;
         this.graduationYear = graduationYear;
@@ -81,8 +80,8 @@ public class Athlete {
         return organization;
     }
 
-    public User getUser() {
-        return user;
+    public Person getPerson() {
+        return person;
     }
 
     public String getFirstName() {

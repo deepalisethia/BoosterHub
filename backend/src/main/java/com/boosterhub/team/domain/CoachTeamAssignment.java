@@ -1,6 +1,6 @@
 package com.boosterhub.team.domain;
 
-import com.boosterhub.user.domain.User;
+import com.boosterhub.person.domain.Person;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,8 +20,8 @@ public class CoachTeamAssignment {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "coach_user_id", nullable = false)
-    private User coachUser;
+    @JoinColumn(name = "coach_person_id", nullable = false)
+    private Person coachPerson;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "team_id", nullable = false)
@@ -36,12 +36,12 @@ public class CoachTeamAssignment {
 
     public CoachTeamAssignment(
             UUID id,
-            User coachUser,
+            Person coachPerson,
             Team team,
             OffsetDateTime createdAt
     ) {
         this.id = id;
-        this.coachUser = coachUser;
+        this.coachPerson = coachPerson;
         this.team = team;
         this.createdAt = createdAt;
     }
@@ -50,8 +50,8 @@ public class CoachTeamAssignment {
         return id;
     }
 
-    public User getCoachUser() {
-        return coachUser;
+    public Person getCoachPerson() {
+        return coachPerson;
     }
 
     public Team getTeam() {

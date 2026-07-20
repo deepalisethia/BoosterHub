@@ -1,4 +1,4 @@
-package com.boosterhub.user.domain;
+package com.boosterhub.person.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,8 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "people")
+public class Person {
 
     @Id
     private UUID id;
@@ -21,11 +21,8 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
-    @Column(nullable = false, unique = true, length = 255)
-    private String email;
-
-    @Column(nullable = false)
-    private boolean active;
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -33,24 +30,22 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected User() {
+    protected Person() {
         // Required by JPA.
     }
 
-    public User(
+    public Person(
             UUID id,
             String firstName,
             String lastName,
-            String email,
-            boolean active,
+            String contactEmail,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt
     ) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
-        this.active = active;
+        this.contactEmail = contactEmail;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -67,12 +62,8 @@ public class User {
         return lastName;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public boolean isActive() {
-        return active;
+    public String getContactEmail() {
+        return contactEmail;
     }
 
     public OffsetDateTime getCreatedAt() {
