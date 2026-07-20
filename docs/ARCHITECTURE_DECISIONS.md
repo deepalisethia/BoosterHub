@@ -153,3 +153,68 @@ Jackson serialize them.
 schema, and there's no risk of leaking lazy-loading proxies or
 internal-only fields. The cost is a mapping method (entity → response)
 that has to be written and kept in sync for every endpoint.
+
+---
+
+## ADR-007: Product Domain Modeling Philosophy
+
+**Status:** Accepted (Sprint 2)
+
+**Context:** Sprint 1 modeled the domain starting from backend entities and
+a flat role field (admin, coach, parent, athlete). Revisiting that
+modeling from the customer's side, rather than the schema's side, surfaced
+that it conflated who a person is with what they do and with what they're
+allowed to act as within an organization. Before further domain modeling
+continues, the philosophy governing how people, activities, and access are
+represented needed to be settled.
+
+**Decision:** BoosterHub is an administrative operating platform for
+booster organizations — not a coaching, athlete-performance, recruiting,
+or practice-management platform. The initial customer is a single Booster
+Organization, and the architecture is intended to support multiple booster
+organizations belonging to the same school.
+
+People and their participation are modeled as follows:
+
+- Person is the stable human identity.
+- Parent, Athlete, and Coach are contextual forms of participation.
+- Athlete is represented through an organization-specific Athlete record
+  belonging to Membership.
+- Parent and Coach participation are expressed through explicit
+  Parent–Athlete and Coach–Team relationships.
+- Volunteer is an activity, not an identity or Position.
+- Membership, Position, and Permission are separate concepts.
+- Positions are assigned through Membership.
+- Permissions attach to Positions, not directly to Person or Membership.
+- Member is a display label for an active Membership without a named
+  Position; it is not itself a Position.
+
+BoosterHub provides a set of built-in positions (President, Vice
+President, Treasurer, Secretary, Board Member, Coach), and organizations
+may additionally define their own custom positions. BoosterHub defines the
+fixed set of available permissions; organizations assign those permissions
+to positions, not to individual people.
+
+**Alternatives Considered:** Treating the school or athletic department as
+the customer, with booster organizations as a subordinate concept.
+Modeling volunteering, fundraising, and similar activities as user roles
+alongside Parent, Coach, and Athlete. Allowing organizations to invent
+their own permissions rather than only assigning from a set BoosterHub
+defines. Continuing with a single flat role per person instead of
+separating Person, Membership, contextual participation, Position, and
+Permission.
+
+**Consequences:** This philosophy sets the direction for all future
+domain modeling: Person, Membership, contextual participation, Position,
+and Permission must remain distinct concepts — Person as the stable human
+identity, Membership as the link between Person and Organization, Parent,
+Athlete, and Coach as contextual participation rather than identity,
+Position as organizational responsibility, and Permission as authorized
+capability. An activity like volunteering must never be conflated with
+contextual participation or identity. The cost is that domain modeling now
+requires more upfront thought than a single role field did, and Sprint 1's flat
+role model will need to be reconciled with this philosophy once that
+modeling work happens. This ADR intentionally stops short of specifying
+how these concepts are represented in the database, the API, or any
+entity — that is future architecture and domain-modeling work, to be
+captured in its own ADR when it happens.

@@ -13,6 +13,13 @@ the patchwork of spreadsheets, Venmo payments, TeamSnap exports,
 SignUpGenius links, email chains, and volunteer trackers with a single
 system built specifically for booster organizations.
 
+BoosterHub is an administrative operating platform for booster
+organizations. It provides a central foundation for managing
+organizational membership, responsibilities, teams, athletes, events,
+volunteer activity, and payment tracking. It is not a coaching platform,
+athlete-performance platform, recruiting platform, practice-management
+system, social network, or accounting system.
+
 This repository documents the engineering journey of building that
 platform from the ground up using a modular monolith architecture: clear
 module boundaries, a schema owned by migrations rather than framework
@@ -40,6 +47,22 @@ BoosterHub isn't attempting to replace all of these on day one. It starts
 from the data that every other tool eventually needs to reference anyway —
 organizations, members, teams, and athletes — and is being built outward
 from there, one real feature at a time.
+
+The initial customer is a single booster organization — for example,
+Canyon Cross Country Boosters or Canyon Boys Soccer Boosters — not a school
+district or an athletic department. Multiple booster organizations already
+coexist at the same school in practice, often with no shared system between
+them; the architecture is intended to support that directly, rather than
+assume one booster organization per school.
+
+A few principles guide how BoosterHub approaches this problem:
+
+- Build around real booster organizations, not idealized ones.
+- BoosterHub adapts to the organization, rather than forcing the
+  organization to adapt to the software.
+- Favor configurable organization positions over hardcoded organizational
+  structure.
+- Complete user journeys matter more than isolated features.
 
 ---
 
@@ -336,6 +359,9 @@ actually being worked on right now:
 
 - Extend the vertical-slice pattern to a second module (`team` or
   `athlete`) to confirm it generalizes beyond `organization`.
+- Define the staged transition from the current flat Role model to the
+  approved Person, Membership, contextual participation, Position, and
+  Permission model.
 - Introduce authentication and authorization ahead of any write endpoints.
 - Add create/update operations once an auth story exists to guard them.
 - Begin the React frontend.

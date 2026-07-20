@@ -434,3 +434,135 @@ Authentication    [░░░░░░░░░░] 0/10
 ```
 
 ---
+
+## Sprint 2: Product-First Thinking — From Entities to the Customer Journey
+
+### Date
+
+2026-07-14
+
+### Objective
+
+Sprint 1 proved the technical pattern: one vertical slice, working end to
+end. Sprint 2 set out to do the opposite kind of work — not writing code,
+but deciding what BoosterHub is actually for, who its first customer is,
+and how the domain should be shaped around real booster-organization
+structure before more entities get built on top of the current flat role
+model.
+
+### Original Thinking
+
+Coming out of Sprint 1, our instinct was to keep extending the pattern
+we'd already proven: pick the next entity (`Team` or `Athlete`), build its
+repository/service/controller/DTO, and move on. That instinct treated the
+backend schema as the source of truth for what BoosterHub is, and treated
+"the customer" as implicitly a school or athletic department — inherited
+from the roster-first shape of Sprint 1's domain model, without our having
+actually decided it.
+
+### What We Learned
+
+Working backward from real booster organizations — Canyon Cross Country
+Boosters, Canyon Boys Soccer Boosters — instead of forward from entities
+changed the picture. Booster organizations don't map one-to-one onto
+schools; a single school routinely has several independent booster
+organizations running in parallel, each with its own leadership and no
+shared system between them today. Designing as if "organization" meant
+"school" would have quietly baked in a wrong assumption at the root of the
+domain.
+
+We also found that the roles modeled in Sprint 1 (`ADMIN`, `COACH`,
+`PARENT`, `ATHLETE`) were conflating two different questions: who somebody
+is, and what they're allowed to do inside a specific organization.
+"Volunteer" kept trying to sneak in as a role, and it never fit — a parent
+doesn't stop being a parent when they sign up to work the concession stand.
+That's what led to the principle: **"Model people by who they are, not by
+the activities they perform."** Volunteering, fundraising, and event
+sign-ups are activities people do, not identities they hold.
+
+### Alternatives Considered
+
+- **Continue entity-first design** — extend Sprint 1's pattern to `Team` or
+  `Athlete` next, letting the customer and domain questions resolve
+  themselves implicitly through schema decisions. Rejected: it would have
+  locked in the school-as-customer and role-as-identity assumptions before
+  we'd examined whether they were correct.
+- **Model "Volunteer" as a role**, alongside Parent, Coach, and Athlete.
+  Rejected: a person's activities change constantly and independently of
+  who they are; treating an activity as a role means repeatedly
+  reassigning identity for something that isn't identity at all.
+- **A single flat permission per user role** (what Sprint 1's `Role` enum
+  effectively does). Rejected in favor of separating Person, Membership,
+  contextual participation, Position, and Permission — a flat per-user
+  role can't express that a Treasurer's permissions belong to the
+  *position*, not to whichever parent happens to hold it this year.
+- **Let organizations define their own permissions**, not just their own
+  positions. Rejected: if every organization could invent arbitrary
+  permissions, BoosterHub couldn't reason about or enforce access
+  consistently across organizations.
+
+### Tradeoffs
+
+Choosing the individual Booster Organization as the initial customer,
+rather than the school, gives up an easy simplification (one organization
+per school) in exchange for a data model that matches reality from day
+one — more complexity now, in return for not having to re-model everything
+the moment a second booster organization at the same school shows up.
+
+Separating Person, Membership, contextual participation, Position, and
+Permission is more upfront modeling than a single role enum, and it means
+the current `Role` field (`ADMIN`/`COACH`/`PARENT`/`ATHLETE`) will need to
+be replaced, not extended. We accept that cost because a flat role model
+cannot express "this position carries these permissions, regardless of who
+holds it" — and retrofitting that distinction after more code depends on
+`Role` would be far more expensive than doing it now.
+
+Product-first thinking also cost us a sprint with no shipped code. We
+accept that tradeoff deliberately: Sprint 1 already proved we can execute;
+Sprint 2 was about making sure we're executing toward the right thing.
+
+### Decisions Made
+
+- The initial customer is a single Booster Organization (e.g., Canyon
+  Cross Country Boosters), not a school or district. The architecture will
+  intentionally support multiple booster organizations belonging to the
+  same school.
+- Person is the stable human identity. Parent, Athlete, and Coach are
+  contextual forms of participation, not permanent identities. Volunteer
+  remains an activity, not a user role.
+- Membership connects Person to Organization, Position represents
+  organizational responsibility, and Permission represents authorized
+  capability — three separate concepts.
+- Some positions are built into BoosterHub: President, Vice President,
+  Treasurer, Secretary, Board Member, Coach.
+- Organizations may define their own custom positions (for example,
+  Volunteer Coordinator, Camp Coordinator, Senior Night Coordinator).
+- BoosterHub owns the fixed set of available permissions. Organizations
+  assign those permissions to positions — they do not invent new
+  permissions.
+- Product-first thinking takes priority over implementation-first
+  thinking: what the organization needs to do comes before what the schema
+  makes convenient.
+
+### Impact on Future Development
+
+The current `OrganizationMembership.role` enum reflects the pre-Sprint-2
+model and will need to be replaced by the Person, Membership, contextual
+participation, Position, and Permission separation described above — this
+is now expected, tracked technical debt rather than an oversight.
+Authentication and authorization work, whenever it starts, should be
+designed against the Position/Permission model from the outset rather
+than against the flat role field, to avoid building on a shape we already
+know is wrong. Any future vertical slice touching `team`,
+`athlete`, or membership should be scoped with this distinction in mind.
+
+### Next Steps
+
+Translate this product thinking into the domain layer: define what
+Position and Permission look like as data, and how an organization's
+assignment of permissions to positions is represented, before writing any
+more feature code. That is architecture and domain-modeling work for the
+human engineering team to decide — not something to infer by continuing to
+extend Sprint 1's pattern by default.
+
+---
