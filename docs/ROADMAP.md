@@ -12,6 +12,10 @@
   Athlete.
 * Approved the staged transition from User and Role to the foundational
   domain model.
+* Implemented and verified ADR-008 Phase 1: established Person while
+  retaining legacy Role temporarily.
+* Added V4 to align schema terminology and verified Hibernate validation.
+* Added Person persistence coverage; full suite passes with five tests.
 
 ## Human-Owned Decisions
 
@@ -26,14 +30,12 @@ below. These are not mechanical implementation tasks.
 
 ## In Progress
 
-* Prepare Phase 1 of ADR-008: establish Person while temporarily retaining
-  legacy Role.
-* Keep the backend buildable and schema validation aligned throughout the
-  transition.
+* Review and commit ADR-008 Phase 1.
+* Prepare the Phase 2 implementation specification only after Phase 1 is
+  committed.
 
 ## Next
 
-* Implement and verify ADR-008 Phase 1.
 * Implement Phase 2 only after Phase 1 is reviewed and committed.
 * Implement the next read-only backend vertical slice only after the
   domain concepts it uses have completed the applicable ADR-008 phase.

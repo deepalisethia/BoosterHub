@@ -566,3 +566,65 @@ human engineering team to decide — not something to infer by continuing to
 extend Sprint 1's pattern by default.
 
 ---
+
+## Sprint 3: Domain Alignment — Phase 1 Establishes Person
+
+### Date
+
+2026-07-20
+
+### Objective
+
+Implement ADR-008 Phase 1: replace `User` with `Person` as the stable
+human identity, while temporarily retaining `OrganizationMembership` and
+the legacy `Role` enum as documented Phase 1 compatibility structures.
+
+### Architectural Boundary
+
+`User` was renamed to `Person` because the entity has always represented
+human information — name and contact details — not authentication.
+`Person` carries an optional, non-unique contact email and no global
+active flag; organization participation remains the responsibility of
+Membership (still expressed today as `OrganizationMembership`), not
+`Person`. Position, Permission, Account, authentication, and Phase 2
+normalization were deliberately excluded from this phase.
+
+### Implementation
+
+`User` was deleted and `Person` created in a new `person` capability
+package. `OrganizationMembership` and the now-`@Deprecated(forRemoval =
+true)` `Role` enum moved into `person.domain` unchanged in behavior.
+Existing relationships (`Athlete`, `ParentAthleteRelationship`,
+`CoachTeamAssignment`) now use Person terminology throughout. `Athlete`
+temporarily references `Person` directly with a nullable `ManyToOne`
+cardinality — it does not yet belong to Membership; that is Phase 2. `V4`
+is a new, forward-only migration; `V1`–`V3` remain untouched.
+
+### Tradeoffs
+
+Keeping `OrganizationMembership` and `Role` in place, rather than
+redesigning them alongside `Person`, kept this phase small and reviewable
+at the cost of carrying visible, documented technical debt — a deprecated
+enum still in active use — for one more phase.
+
+### Validation
+
+Five tests passed against PostgreSQL with Hibernate `ddl-auto=validate`
+enabled: the existing context-load and organization tests, plus new
+`Person` persistence coverage.
+
+### Lesson Learned
+
+A comment change in the already-applied, still-uncommitted `V4` migration
+caused a local Flyway checksum mismatch, since Flyway checksums a
+migration's full file content, not just its SQL statements. The local
+seed-only database was rebuilt to resync, which was safe only because `V4`
+was still uncommitted. Once a migration is committed or shared, it must
+not be edited — a new migration must be created instead.
+
+### Next Steps
+
+Review, commit, and push Phase 1. Phase 2 planning begins only after
+Phase 1 is committed.
+
+---

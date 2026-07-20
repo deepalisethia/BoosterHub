@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Current Version** | v0.0.1 |
-| **Sprint** | Sprint 1 |
+| **Sprint** | Sprint 3 |
 | **Build Status** | Passing |
 | **Architecture** | Modular Monolith |
 | **Last Updated** | July 2026 |
@@ -143,7 +143,7 @@ monolith lets us:
 We are optimizing for maintainability today while leaving room for future
 scale.
 
-Packages are organized by **business capability** (`organization`, `user`,
+Packages are organized by **business capability** (`organization`, `person`,
 `team`, `athlete`) rather than by technical layer (all controllers together,
 all repositories together). This keeps each feature's boundary visible by
 inspection and leaves the option open to extract a module into its own
@@ -161,7 +161,7 @@ Each feature module is structured into four layers:
 ```
 com.boosterhub
 ├── organization   (api → application → infrastructure → domain)
-├── user           (domain only)
+├── person         (domain only)
 ├── team           (domain only)
 └── athlete        (domain only)
 ```
@@ -202,13 +202,13 @@ across four feature packages:
 | Entity | Package | Description |
 |---|---|---|
 | `Organization` | `organization.domain` | A booster organization (name, school, mascot, active flag). |
-| `User` | `user.domain` | A person with login-worthy identity (name, unique email, active flag). |
-| `OrganizationMembership` | `user.domain` | Links a `User` to an `Organization` with a role (`ADMIN`, `COACH`, `PARENT`, `ATHLETE`). |
+| `Person` | `person.domain` | The stable human identity (name, optional non-unique contact email). Carries no login/account responsibility and no global active flag. |
+| `OrganizationMembership` | `person.domain` | Temporary ADR-008 Phase 1 compatibility model linking a `Person` to an `Organization` with a legacy role (`ADMIN`, `COACH`, `PARENT`, `ATHLETE`). `Role` remains deprecated and is scheduled for removal in ADR-008 Phase 2. |
 | `Team` | `team.domain` | A team within an organization, with a category (`BOYS`, `GIRLS`, `COED`). |
-| `Athlete` | `athlete.domain` | An athlete's roster record. May optionally link to a `User` — a roster entry does not require a login account to exist. |
+| `Athlete` | `athlete.domain` | An athlete's roster record. During Phase 1 it may temporarily reference `Person` directly (nullable) — Phase 2 will make `Athlete` belong to `Membership` instead. |
 | `TeamAthlete` | `team.domain` | Links an `Athlete` to a `Team` (roster membership). |
-| `CoachTeamAssignment` | `team.domain` | Links a `User` (as coach) to a `Team`. |
-| `ParentAthleteRelationship` | `athlete.domain` | Links a parent `User` to an `Athlete`, with an optional relationship type. |
+| `CoachTeamAssignment` | `team.domain` | Links a `Person` (as coach) to a `Team`. |
+| `ParentAthleteRelationship` | `athlete.domain` | Links a parent `Person` to an `Athlete`, with an optional relationship type. |
 
 Membership, rostering, coaching, and parent relationships are modeled as
 distinct tables with their own foreign keys and constraints, rather than one
@@ -223,18 +223,28 @@ for the full reasoning.
 
 - Modular monolith package structure established, organized by business
   capability.
-- Domain modeled across `organization`, `user`, `team`, and `athlete`:
-  8 JPA entities backed by 8 tables, created via 2 Flyway migrations.
+- Domain modeled across `organization`, `person`, `team`, and `athlete`:
+  8 JPA entities backed by 8 tables, created via 4 Flyway migrations.
 - Flyway configured as the sole owner of schema; Hibernate runs in
   `ddl-auto=validate` and never generates or alters schema itself.
 - One complete, working REST endpoint: `GET /api/organizations`, returning
   active organizations ordered alphabetically by name as
   `OrganizationResponse` DTOs.
-- Full Maven test suite passes against a live PostgreSQL instance
-  (currently one Spring context-load test).
+- ADR-008 Phase 1 is implemented: `User` was replaced by `Person`, and
+  existing relationship terminology (`OrganizationMembership`, `Athlete`,
+  `ParentAthleteRelationship`, `CoachTeamAssignment`) was changed from
+  `User` to `Person`.
+- `V4__establish_person.sql` migrated the schema to Person terminology
+  without editing `V1`–`V3`.
+- Legacy `Role` remains temporarily, deprecated and scheduled for removal
+  in ADR-008 Phase 2.
+- Full Maven test suite passes against a live PostgreSQL instance: five
+  tests, including new `Person` persistence coverage.
 
-Not yet implemented: authentication, any write endpoints (create, update,
-delete), REST exposure for `user`, `team`, or `athlete`, and the frontend.
+Not yet implemented: ADR-008 Phase 2 (Membership normalization) and
+Phase 3 (Position and Permission), Account, authentication, any write
+endpoints (create, update, delete), REST exposure for `person`, `team`,
+or `athlete`, and the frontend.
 
 ---
 
@@ -333,13 +343,15 @@ BoosterHub/
 │       │   │   │   ├── application/    (OrganizationService)
 │       │   │   │   ├── domain/         (Organization)
 │       │   │   │   └── infrastructure/ (OrganizationRepository)
-│       │   │   ├── user/domain/        (User, Role, OrganizationMembership)
+│       │   │   ├── person/domain/      (Person, OrganizationMembership, Role [deprecated])
 │       │   │   ├── team/domain/        (Team, TeamCategory, TeamAthlete, CoachTeamAssignment)
 │       │   │   └── athlete/domain/     (Athlete, ParentAthleteRelationship)
 │       │   └── resources/
 │       │       ├── application.properties
-│       │       └── db/migration/       (V1__…, V2__…)
-│       └── test/java/com/boosterhub/   (BoosterHubApplicationTests)
+│       │       └── db/migration/       (V1__…, V2__…, V4__establish_person)
+│       └── test/java/com/boosterhub/
+│           ├── BoosterHubApplicationTests.java
+│           └── person/domain/          (PersonPersistenceIntegrationTest)
 ├── frontend/                            (reserved for future React app)
 ├── infrastructure/
 │   └── docker-compose.yml               (PostgreSQL 17)
@@ -357,15 +369,14 @@ BoosterHub/
 Kept intentionally high level — see the Engineering Journal for what's
 actually being worked on right now:
 
-- Implement Phase 1 of ADR-008 by establishing Person while temporarily
-  retaining legacy Role.
-- Review and commit Phase 1 before beginning Phase 2.
-- Extend the read-only vertical-slice pattern to `team` or `athlete` only
-  after the domain concepts used by that slice have completed the
-  applicable ADR-008 phase.
-- Keep authentication ahead of protected write endpoints.
-- Keep React frontend work deferred until the immediate backend
-  foundation is aligned.
+- Phase 1 of ADR-008 is complete: `Person` established while temporarily
+  retaining legacy `Role`.
+- Review and commit Phase 1.
+- Begin Phase 2 implementation planning only after Phase 1 is committed.
+- Keep the read-only vertical-slice extension to `team` or `athlete`
+  deferred until the applicable ADR-008 Phase 2 alignment is complete.
+- Keep authentication and the React frontend deferred behind the
+  immediate backend foundation.
 
 ---
 
