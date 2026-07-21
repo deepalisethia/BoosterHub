@@ -1,6 +1,7 @@
-package com.boosterhub.person.domain;
+package com.boosterhub.membership.domain;
 
 import com.boosterhub.organization.domain.Organization;
+import com.boosterhub.person.domain.Person;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,15 +15,9 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/**
- * Temporary ADR-008 Phase 1 technical debt: retains the pre-Sprint-2
- * Role-based membership model, unchanged, so Phase 1 can establish Person
- * without also redesigning Membership. Phase 2 will move this concept to
- * its final capability and remove Role.
- */
 @Entity
 @Table(name = "organization_memberships")
-public class OrganizationMembership {
+public class Membership {
 
     @Id
     private UUID id;
@@ -37,31 +32,26 @@ public class OrganizationMembership {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private Role role;
-
-    @Column(nullable = false)
-    private boolean active;
+    private MembershipStatus status;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
-    protected OrganizationMembership() {
+    protected Membership() {
         // Required by JPA.
     }
 
-    public OrganizationMembership(
+    public Membership(
             UUID id,
             Organization organization,
             Person person,
-            Role role,
-            boolean active,
+            MembershipStatus status,
             OffsetDateTime createdAt
     ) {
         this.id = id;
         this.organization = organization;
         this.person = person;
-        this.role = role;
-        this.active = active;
+        this.status = status;
         this.createdAt = createdAt;
     }
 
@@ -77,12 +67,8 @@ public class OrganizationMembership {
         return person;
     }
 
-    public Role getRole() {
-        return role;
-    }
-
-    public boolean isActive() {
-        return active;
+    public MembershipStatus getStatus() {
+        return status;
     }
 
     public OffsetDateTime getCreatedAt() {
